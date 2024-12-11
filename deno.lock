@@ -1,0 +1,19 @@
+{
+  "version": "4",
+  "specifiers": {
+    "jsr:@std/cli@*": "1.0.8"
+  },
+  "jsr": {
+    "@std/cli@1.0.8": {
+      "integrity": "3762d8dc9a373715c08d871c38d45e637b25266f013a1d0bbe560bca409de94e"
+    }
+  },
+  "workspace": {
+    "packageJson": {
+      "dependencies": [
+        "npm:@tsconfig/node22@22",
+        "npm:@types/node@^22.10.1"
+      ]
+    }
+  }
+}

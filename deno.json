@@ -1,0 +1,5 @@
+{
+  "tasks": {
+    "start": "deno run --allow-read=assets/,src/ --allow-env=\"AOC*\" main.ts"
+  }
+}
