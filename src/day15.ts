@@ -85,6 +85,9 @@ const solve1 = async (
 
     const moveFunctions: Record<Direction, (arg0: Coordinates) => Coordinates> =
       {
+        /**
+         * Move up
+         */
         '^': ([x, y]: Coordinates): Coordinates => {
           const closestWall = currentCol.lastIndexOf('#', y - 1);
           const closestSpace = currentCol.lastIndexOf('.', y - 1);
@@ -100,6 +103,10 @@ const solve1 = async (
 
           return [x, y - 1];
         },
+
+        /**
+         * Move down
+         */
         v: ([x, y]: Coordinates): Coordinates => {
           const closestWall = currentCol.indexOf('#', y + 1);
           const closestSpace = currentCol.indexOf('.', y + 1);
@@ -115,6 +122,10 @@ const solve1 = async (
 
           return [x, y + 1];
         },
+
+        /**
+         * Move left
+         */
         '<': ([x, y]: Coordinates): Coordinates => {
           const closestWall = currentRow.lastIndexOf('#', x - 1);
           const closestSpace = currentRow.lastIndexOf('.', x - 1);
@@ -128,6 +139,10 @@ const solve1 = async (
 
           return [x - 1, y];
         },
+
+        /**
+         * Move right
+         */
         '>': ([x, y]: Coordinates): Coordinates => {
           const closestWall = currentRow.indexOf('#', x + 1);
           const closestSpace = currentRow.indexOf('.', x + 1);
@@ -148,6 +163,8 @@ const solve1 = async (
     if (visualize) {
       drawMap(map, true);
       console.log({
+        x,
+        y,
         direction,
         movementIdx,
         totalMovements: movements.length,
@@ -176,8 +193,12 @@ const solve2 = async (
     const direction = movements[moveCount];
     const currentRow = map[y];
 
+    /** Set of movement functions mapped to direction */
     const moveFunctions: Record<Direction, (arg0: Coordinates) => Coordinates> =
       {
+        /**
+         * Move up
+         */
         '^': ([x, y]: Coordinates): Coordinates => {
           const charAboveRobot = map[y - 1][x];
 
@@ -236,6 +257,10 @@ const solve2 = async (
 
           return [x, y - 1];
         },
+
+        /**
+         * Move down
+         */
         v: ([x, y]: Coordinates): Coordinates => {
           const charBelowRobot = map[y + 1][x];
 
@@ -251,7 +276,6 @@ const solve2 = async (
             return [x, y + 1];
           }
 
-          // get affected boxes
           let doNotMove = false;
 
           let boxesToMove = [
@@ -295,6 +319,10 @@ const solve2 = async (
 
           return [x, y + 1];
         },
+
+        /**
+         * Move left
+         */
         '<': ([x, y]: Coordinates): Coordinates => {
           const closestWall = currentRow.lastIndexOf('#', x - 1);
           const closestSpace = currentRow.lastIndexOf('.', x - 1);
@@ -308,6 +336,10 @@ const solve2 = async (
 
           return [x - 1, y];
         },
+
+        /**
+         * Move right
+         */
         '>': ([x, y]: Coordinates): Coordinates => {
           const closestWall = currentRow.indexOf('#', x + 1);
           const closestSpace = currentRow.indexOf('.', x + 1);
@@ -328,6 +360,8 @@ const solve2 = async (
     if (visualize) {
       drawMap(map);
       console.log({
+        x,
+        y,
         direction,
         moveCount,
         totalMovements: movements.length,
