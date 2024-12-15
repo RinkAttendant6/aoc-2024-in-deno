@@ -187,173 +187,171 @@ const solve2 = async (
   movements: Readonly<Direction[]>,
   visualize: number = 0
 ): Promise<WideWarehouseGrid> => {
+  /** Set of movement functions mapped to direction */
+  const moveFunctions: Record<Direction, (arg0: Coordinates) => Coordinates> = {
+    /**
+     * Move up
+     */
+    '^': ([x, y]: Coordinates): Coordinates => {
+      const charAboveRobot = map[y - 1][x];
+
+      if (charAboveRobot === '#') {
+        // can't move
+        return [x, y];
+      }
+
+      if (charAboveRobot === '.') {
+        // nothing above, just move
+        map[y - 1][x] = '@';
+        map[y][x] = '.';
+        return [x, y - 1];
+      }
+
+      let doNotMove = false;
+
+      let boxesToMove = [
+        `${x} ${y - 1}`,
+        `${charAboveRobot === '[' ? x + 1 : x - 1} ${y - 1}`,
+      ];
+
+      for (let c = 0; c < boxesToMove.length; ++c) {
+        const [cx, cy] = boxesToMove[c].split(' ').map(Number);
+        const charAbove = map[cy - 1][cx];
+
+        doNotMove ||= charAbove === '#';
+
+        if (charAbove === '[') {
+          boxesToMove.push(`${cx} ${cy - 1}`, `${cx + 1} ${cy - 1}`);
+        } else if (charAbove === ']') {
+          boxesToMove.push(`${cx - 1} ${cy - 1}`, `${cx} ${cy - 1}`);
+        }
+
+        boxesToMove = [...new Set(boxesToMove)];
+      }
+
+      if (doNotMove) {
+        return [x, y];
+      }
+
+      // start moving from top to bottom
+      boxesToMove
+        .sort((a, b) => {
+          const [ax, ay] = a.split(' ').map(Number);
+          const [bx, by] = b.split(' ').map(Number);
+          return ay - by || ax - bx;
+        })
+        .forEach((coords) => {
+          const [cx, cy] = coords.split(' ').map(Number);
+          map[cy - 1][cx] = map[cy][cx];
+          map[cy][cx] = '.';
+        });
+
+      map[y][x] = '.';
+
+      return [x, y - 1];
+    },
+
+    /**
+     * Move down
+     */
+    v: ([x, y]: Coordinates): Coordinates => {
+      const charBelowRobot = map[y + 1][x];
+
+      if (charBelowRobot === '#') {
+        // can't move
+        return [x, y];
+      }
+
+      if (charBelowRobot === '.') {
+        // nothing below, just move
+        map[y + 1][x] = '@';
+        map[y][x] = '.';
+        return [x, y + 1];
+      }
+
+      let doNotMove = false;
+
+      let boxesToMove = [
+        `${x} ${y + 1}`,
+        `${charBelowRobot === '[' ? x + 1 : x - 1} ${y + 1}`,
+      ];
+
+      for (let c = 0; c < boxesToMove.length; ++c) {
+        const [cx, cy] = boxesToMove[c].split(' ').map(Number);
+        const charBelow = map[cy + 1][cx];
+
+        doNotMove ||= charBelow === '#';
+
+        if (charBelow === '[') {
+          boxesToMove.push(`${cx} ${cy + 1}`, `${cx + 1} ${cy + 1}`);
+        } else if (charBelow === ']') {
+          boxesToMove.push(`${cx - 1} ${cy + 1}`, `${cx} ${cy + 1}`);
+        }
+
+        boxesToMove = [...new Set(boxesToMove)];
+      }
+
+      if (doNotMove) {
+        return [x, y];
+      }
+
+      // start moving from bottom to top
+      boxesToMove
+        .sort((a, b) => {
+          const [ax, ay] = a.split(' ').map(Number);
+          const [bx, by] = b.split(' ').map(Number);
+          return by - ay || ax - bx;
+        })
+        .forEach((coords) => {
+          const [cx, cy] = coords.split(' ').map(Number);
+          map[cy + 1][cx] = map[cy][cx];
+          map[cy][cx] = '.';
+        });
+
+      map[y][x] = '.';
+
+      return [x, y + 1];
+    },
+
+    /**
+     * Move left
+     */
+    '<': ([x, y]: Coordinates): Coordinates => {
+      const closestWall = map[y].lastIndexOf('#', x - 1);
+      const closestSpace = map[y].lastIndexOf('.', x - 1);
+
+      if (closestSpace < closestWall) {
+        return [x, y];
+      }
+
+      map[y].splice(closestSpace, 1);
+      map[y].splice(x, 0, '.');
+
+      return [x - 1, y];
+    },
+
+    /**
+     * Move right
+     */
+    '>': ([x, y]: Coordinates): Coordinates => {
+      const closestWall = map[y].indexOf('#', x + 1);
+      const closestSpace = map[y].indexOf('.', x + 1);
+
+      if (closestSpace < 0 || closestSpace > closestWall) {
+        return [x, y];
+      }
+
+      map[y].splice(closestSpace, 1);
+      map[y].splice(x, 0, '.');
+
+      return [x + 1, y];
+    },
+  };
+
   let [x, y] = getStartingPosition(map);
 
   for (let moveCount = 0; moveCount < movements.length; ++moveCount) {
     const direction = movements[moveCount];
-    const currentRow = map[y];
-
-    /** Set of movement functions mapped to direction */
-    const moveFunctions: Record<Direction, (arg0: Coordinates) => Coordinates> =
-      {
-        /**
-         * Move up
-         */
-        '^': ([x, y]: Coordinates): Coordinates => {
-          const charAboveRobot = map[y - 1][x];
-
-          if (charAboveRobot === '#') {
-            // can't move
-            return [x, y];
-          }
-
-          if (charAboveRobot === '.') {
-            // nothing above, just move
-            map[y - 1][x] = '@';
-            map[y][x] = '.';
-            return [x, y - 1];
-          }
-
-          let doNotMove = false;
-
-          let boxesToMove = [
-            `${x} ${y - 1}`,
-            `${charAboveRobot === '[' ? x + 1 : x - 1} ${y - 1}`,
-          ];
-
-          for (let c = 0; c < boxesToMove.length; ++c) {
-            const [cx, cy] = boxesToMove[c].split(' ').map(Number);
-            const charAbove = map[cy - 1][cx];
-
-            doNotMove ||= charAbove === '#';
-
-            if (charAbove === '[') {
-              boxesToMove.push(`${cx} ${cy - 1}`, `${cx + 1} ${cy - 1}`);
-            } else if (charAbove === ']') {
-              boxesToMove.push(`${cx - 1} ${cy - 1}`, `${cx} ${cy - 1}`);
-            }
-
-            boxesToMove = [...new Set(boxesToMove)];
-          }
-
-          if (doNotMove) {
-            return [x, y];
-          }
-
-          // start moving from top to bottom
-          boxesToMove
-            .sort((a, b) => {
-              const [ax, ay] = a.split(' ').map(Number);
-              const [bx, by] = b.split(' ').map(Number);
-              return ay - by || ax - bx;
-            })
-            .forEach((coords) => {
-              const [cx, cy] = coords.split(' ').map(Number);
-              map[cy - 1][cx] = map[cy][cx];
-              map[cy][cx] = '.';
-            });
-
-          map[y][x] = '.';
-
-          return [x, y - 1];
-        },
-
-        /**
-         * Move down
-         */
-        v: ([x, y]: Coordinates): Coordinates => {
-          const charBelowRobot = map[y + 1][x];
-
-          if (charBelowRobot === '#') {
-            // can't move
-            return [x, y];
-          }
-
-          if (charBelowRobot === '.') {
-            // nothing below, just move
-            map[y + 1][x] = '@';
-            map[y][x] = '.';
-            return [x, y + 1];
-          }
-
-          let doNotMove = false;
-
-          let boxesToMove = [
-            `${x} ${y + 1}`,
-            `${charBelowRobot === '[' ? x + 1 : x - 1} ${y + 1}`,
-          ];
-
-          for (let c = 0; c < boxesToMove.length; ++c) {
-            const [cx, cy] = boxesToMove[c].split(' ').map(Number);
-            const charBelow = map[cy + 1][cx];
-
-            doNotMove ||= charBelow === '#';
-
-            if (charBelow === '[') {
-              boxesToMove.push(`${cx} ${cy + 1}`, `${cx + 1} ${cy + 1}`);
-            } else if (charBelow === ']') {
-              boxesToMove.push(`${cx - 1} ${cy + 1}`, `${cx} ${cy + 1}`);
-            }
-
-            boxesToMove = [...new Set(boxesToMove)];
-          }
-
-          if (doNotMove) {
-            return [x, y];
-          }
-
-          // start moving from bottom to top
-          boxesToMove
-            .sort((a, b) => {
-              const [ax, ay] = a.split(' ').map(Number);
-              const [bx, by] = b.split(' ').map(Number);
-              return by - ay || ax - bx;
-            })
-            .forEach((coords) => {
-              const [cx, cy] = coords.split(' ').map(Number);
-              map[cy + 1][cx] = map[cy][cx];
-              map[cy][cx] = '.';
-            });
-
-          map[y][x] = '.';
-
-          return [x, y + 1];
-        },
-
-        /**
-         * Move left
-         */
-        '<': ([x, y]: Coordinates): Coordinates => {
-          const closestWall = currentRow.lastIndexOf('#', x - 1);
-          const closestSpace = currentRow.lastIndexOf('.', x - 1);
-
-          if (closestSpace < closestWall) {
-            return [x, y];
-          }
-
-          map[y].splice(closestSpace, 1);
-          map[y].splice(x, 0, '.');
-
-          return [x - 1, y];
-        },
-
-        /**
-         * Move right
-         */
-        '>': ([x, y]: Coordinates): Coordinates => {
-          const closestWall = currentRow.indexOf('#', x + 1);
-          const closestSpace = currentRow.indexOf('.', x + 1);
-
-          if (closestSpace < 0 || closestSpace > closestWall) {
-            return [x, y];
-          }
-
-          map[y].splice(closestSpace, 1);
-          map[y].splice(x, 0, '.');
-
-          return [x + 1, y];
-        },
-      };
 
     [x, y] = moveFunctions[direction]([x, y]);
 
