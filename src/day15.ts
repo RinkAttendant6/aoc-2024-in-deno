@@ -21,10 +21,10 @@ const map: WarehouseGrid = data[0]
   .map((x) => x.split('')) as WarehouseGrid;
 
 const map2: WideWarehouseGrid = data[0]
-  .replaceAll(/#/g, '##')
-  .replaceAll(/O/g, '[]')
-  .replaceAll(/\./g, '..')
-  .replaceAll(/@/g, '@.')
+  .replaceAll('#', '##')
+  .replaceAll('O', '[]')
+  .replaceAll('.', '..')
+  .replaceAll('@', '@.')
   .split('\n')
   .map((x) => x.split('')) as WideWarehouseGrid;
 
@@ -76,87 +76,87 @@ const solve1 = async (
   movements: Readonly<Direction[]>,
   visualize: number = 0
 ): Promise<WarehouseGrid> => {
+  /** Set of movement functions mapped to direction */
+  const moveFunctions: Record<Direction, (arg0: Coordinates) => Coordinates> = {
+    /**
+     * Move up
+     */
+    '^': ([x, y]: Coordinates): Coordinates => {
+      const currentCol = map.map((row) => row[x]);
+      const closestWall = currentCol.lastIndexOf('#', y - 1);
+      const closestSpace = currentCol.lastIndexOf('.', y - 1);
+
+      if (closestSpace < closestWall) {
+        return [x, y];
+      }
+
+      for (let i = closestSpace; i < y; ++i) {
+        map[i][x] = map[i + 1][x];
+      }
+      map[y][x] = '.';
+
+      return [x, y - 1];
+    },
+
+    /**
+     * Move down
+     */
+    v: ([x, y]: Coordinates): Coordinates => {
+      const currentCol = map.map((row) => row[x]);
+      const closestWall = currentCol.indexOf('#', y + 1);
+      const closestSpace = currentCol.indexOf('.', y + 1);
+
+      if (closestSpace < 0 || closestSpace > closestWall) {
+        return [x, y];
+      }
+
+      for (let i = closestSpace; i > y; --i) {
+        map[i][x] = map[i - 1][x];
+      }
+      map[y][x] = '.';
+
+      return [x, y + 1];
+    },
+
+    /**
+     * Move left
+     */
+    '<': ([x, y]: Coordinates): Coordinates => {
+      const closestWall = map[y].lastIndexOf('#', x - 1);
+      const closestSpace = map[y].lastIndexOf('.', x - 1);
+
+      if (closestSpace < closestWall) {
+        return [x, y];
+      }
+
+      map[y].splice(closestSpace, 1);
+      map[y].splice(x, 0, '.');
+
+      return [x - 1, y];
+    },
+
+    /**
+     * Move right
+     */
+    '>': ([x, y]: Coordinates): Coordinates => {
+      const closestWall = map[y].indexOf('#', x + 1);
+      const closestSpace = map[y].indexOf('.', x + 1);
+
+      if (closestSpace < 0 || closestSpace > closestWall) {
+        return [x, y];
+      }
+
+      map[y].splice(closestSpace, 1);
+      map[y].splice(x, 0, '.');
+
+      return [x + 1, y];
+    },
+  };
+
   let [x, y] = getStartingPosition(map);
 
   for (let movementIdx = 0; movementIdx < movements.length; ++movementIdx) {
     const direction = movements[movementIdx];
-    const currentRow = map[y];
-    const currentCol = map.map((row) => row[x]);
-
-    const moveFunctions: Record<Direction, (arg0: Coordinates) => Coordinates> =
-      {
-        /**
-         * Move up
-         */
-        '^': ([x, y]: Coordinates): Coordinates => {
-          const closestWall = currentCol.lastIndexOf('#', y - 1);
-          const closestSpace = currentCol.lastIndexOf('.', y - 1);
-
-          if (closestSpace < closestWall) {
-            return [x, y];
-          }
-
-          for (let i = closestSpace; i < y; ++i) {
-            map[i][x] = map[i + 1][x];
-          }
-          map[y][x] = '.';
-
-          return [x, y - 1];
-        },
-
-        /**
-         * Move down
-         */
-        v: ([x, y]: Coordinates): Coordinates => {
-          const closestWall = currentCol.indexOf('#', y + 1);
-          const closestSpace = currentCol.indexOf('.', y + 1);
-
-          if (closestSpace < 0 || closestSpace > closestWall) {
-            return [x, y];
-          }
-
-          for (let i = closestSpace; i > y; --i) {
-            map[i][x] = map[i - 1][x];
-          }
-          map[y][x] = '.';
-
-          return [x, y + 1];
-        },
-
-        /**
-         * Move left
-         */
-        '<': ([x, y]: Coordinates): Coordinates => {
-          const closestWall = currentRow.lastIndexOf('#', x - 1);
-          const closestSpace = currentRow.lastIndexOf('.', x - 1);
-
-          if (closestSpace < closestWall) {
-            return [x, y];
-          }
-
-          map[y].splice(closestSpace, 1);
-          map[y].splice(x, 0, '.');
-
-          return [x - 1, y];
-        },
-
-        /**
-         * Move right
-         */
-        '>': ([x, y]: Coordinates): Coordinates => {
-          const closestWall = currentRow.indexOf('#', x + 1);
-          const closestSpace = currentRow.indexOf('.', x + 1);
-
-          if (closestSpace < 0 || closestSpace > closestWall) {
-            return [x, y];
-          }
-
-          map[y].splice(closestSpace, 1);
-          map[y].splice(x, 0, '.');
-
-          return [x + 1, y];
-        },
-      };
 
     [x, y] = moveFunctions[direction]([x, y]);
 
