@@ -92,6 +92,7 @@ export const solve2 = (
     const destinationSteps = search(grid, start)[maxY][maxX];
 
     if (destinationSteps === Infinity) {
+      // i - 1 because the .slice does not include i itself
       return data[i - 1];
     }
   }
