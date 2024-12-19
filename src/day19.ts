@@ -15,7 +15,7 @@ const data = rawData.trim().split('\n\n');
 const cache: Record<string, number> = {};
 
 /**
- * Count number of possible designs for a given towen and set of patterns
+ * Count number of possible designs for a given towel and set of patterns
  */
 const countDesigns = (towel: string, patterns: string[]): number => {
   if (towel === '') {
