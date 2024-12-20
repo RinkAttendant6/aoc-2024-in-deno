@@ -5,7 +5,7 @@ import process from 'node:process';
 const AOC_DAY = 17;
 const inputPath =
   process.env.AOC_INPUT_PATH ??
-  path.join(import.meta.dirname, '..', 'assets', `day${AOC_DAY}.txt`);
+  path.join(import.meta.dirname!, '..', 'assets', `day${AOC_DAY}.txt`);
 
 const rawData = (await fs.readFile(inputPath, 'utf-8')).trim();
 
