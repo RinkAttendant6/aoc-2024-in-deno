@@ -14,9 +14,6 @@ const data = rawData
   .split('\n')
   .map((r) => r.split(''));
 
-const height = data.length;
-const width = data[0].length;
-
 /**
  * Perform breadth-first search to populate distances from start
  */
@@ -44,14 +41,7 @@ const doBfs = (maze: Readonly<string[][]>): number[][] => {
     const currentValue = grid[y][x];
 
     for (const [ax, ay] of neighbours) {
-      if (
-        ax < 0 ||
-        ax >= width ||
-        ay < 0 ||
-        ay >= height ||
-        grid[ay][ax] === -1 ||
-        grid[ay][ax] < currentValue + 1
-      ) {
+      if (grid[ay]?.[ax] === -1 || grid[ay]?.[ax] < currentValue + 1) {
         continue;
       }
 
@@ -73,14 +63,14 @@ const determineSavings = (
 ): number => {
   let sum = 0;
 
-  for (let y1 = 1; y1 < height - 1; ++y1) {
-    for (let x1 = 1; x1 < width - 1; ++x1) {
+  for (let y1 = 1; y1 < distanceGrid.length - 1; ++y1) {
+    for (let x1 = 1; x1 < distanceGrid[y1].length - 1; ++x1) {
       if (distanceGrid[y1][x1] === -1) {
         continue;
       }
 
-      for (let y2 = 1; y2 < height - 1; ++y2) {
-        for (let x2 = 1; x2 < width - 1; ++x2) {
+      for (let y2 = 1; y2 < distanceGrid.length - 1; ++y2) {
+        for (let x2 = 1; x2 < distanceGrid[y2].length - 1; ++x2) {
           const distance = Math.abs(y2 - y1) + Math.abs(x2 - x1);
 
           if (
@@ -98,7 +88,7 @@ const determineSavings = (
   return sum;
 };
 
-const distances = doBfs(data);
+const distances: Readonly<number[][]> = doBfs(data);
 
 export const part1 = determineSavings(distances);
 export const part2 = determineSavings(distances, 20);
