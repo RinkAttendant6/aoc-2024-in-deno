@@ -17,17 +17,17 @@ const data = rawData
 const height = data.length;
 const width = data[0].length;
 
-const startY = data.findIndex((row) => row.includes('S'));
-const startX = data[startY].indexOf('S');
+/**
+ * Perform breadth-first search to populate distances from start
+ */
+const doBfs = (maze: Readonly<string[][]>): number[][] => {
+  const startY = maze.findIndex((row) => row.includes('S'));
+  const startX = maze[startY].indexOf('S');
 
-const endY = data.findIndex((row) => row.includes('E'));
-const endX = data[endY].indexOf('E');
+  const grid = maze.map((row) =>
+    row.map((cell) => (cell === '#' ? -1 : Infinity))
+  );
 
-const emptyDistanceGrid = data.map((row) =>
-  row.map((cell) => (cell === '#' ? -1 : Infinity))
-);
-
-const doDfs = (grid: number[][]): number[][] => {
   const queue = [[startX, startY]];
   grid[startY][startX] = 0;
 
@@ -63,36 +63,44 @@ const doDfs = (grid: number[][]): number[][] => {
   return grid;
 };
 
-const baseline = doDfs(structuredClone(emptyDistanceGrid))[endY][endX];
+/**
+ * Determine number of savings above a threshold, given a maximum cheating distance
+ */
+const determineSavings = (
+  distanceGrid: Readonly<number[][]>,
+  maxCheatDistance: number = 2,
+  minThreshold: number = 100
+): number => {
+  let sum = 0;
 
-const walls = [];
+  for (let y1 = 1; y1 < height - 1; ++y1) {
+    for (let x1 = 1; x1 < width - 1; ++x1) {
+      if (distanceGrid[y1][x1] === -1) {
+        continue;
+      }
 
-for (let i = 1; i < data.length - 1; ++i) {
-  for (let j = 1; j < data[i].length - 1; ++j) {
-    if (data[i][j] === '#') {
-      walls.push([j, i]);
+      for (let y2 = 1; y2 < height - 1; ++y2) {
+        for (let x2 = 1; x2 < width - 1; ++x2) {
+          const distance = Math.abs(y2 - y1) + Math.abs(x2 - x1);
+
+          if (
+            distance <= maxCheatDistance &&
+            distanceGrid[y2][x2] - distanceGrid[y1][x1] - distance >=
+              minThreshold
+          ) {
+            ++sum;
+          }
+        }
+      }
     }
   }
-}
 
-export let part1 = 0;
-for (let i = 0; i < walls.length; ++i) {
-  const [x1, y1] = walls[i];
+  return sum;
+};
 
-  const adjacentWalls = walls.filter(
-    ([x2, y2]) => Math.abs(x1 - x2) < 1 && Math.abs(y1 - y2) < 1
-  );
+const distances = doBfs(data);
 
-  for (const [x2, y2] of adjacentWalls) {
-    const q = structuredClone(emptyDistanceGrid);
-    q[y1][x1] = Infinity;
-    q[y2][x2] = Infinity;
+export const part1 = determineSavings(distances);
+export const part2 = determineSavings(distances, 20);
 
-    const saving = baseline - doDfs(q)[endY][endX];
-    if (saving >= 100) {
-      ++part1;
-    }
-  }
-}
-
-console.log({ part1 });
+console.log({ part1, part2 });
